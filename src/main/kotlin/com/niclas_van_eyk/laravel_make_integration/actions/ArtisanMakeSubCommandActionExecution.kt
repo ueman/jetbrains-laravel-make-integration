@@ -37,6 +37,7 @@ open class ArtisanMakeSubCommandActionExecution(
         get() = JetbrainsAdapter(project, command)
 
     fun execute() {
+        ArtisanMakeDialog(project, laravelProject, command).showAndGet()
         val initialInput = targetResolver.suggestInitialInputFor(
             target,
             laravelProject.paths.base
@@ -64,14 +65,14 @@ open class ArtisanMakeSubCommandActionExecution(
                     var message = "No PHP interpreter found!"
                     message += "\nPlease set one in Settings > Languages & Frameworks > PHP"
 
-                    makeResult = PHPScriptRun.Result.Failure(arrayListOf(message))
+                    makeResult = PHPScriptRun.Result(false, arrayListOf(message))
                 }
             }, commandLine, true, project)
 
         if (cancelled || makeResult == null) return
 
-        if (makeResult is PHPScriptRun.Result.Failure) {
-            ideAdapter.notification((makeResult as PHPScriptRun.Result.Failure).log)
+        if (makeResult!!.wasFailure) {
+            ideAdapter.notification(makeResult!!.log)
         }
 
         val createdFilePath = createdFileResolver.getCreatedFilePath(command, parameters)

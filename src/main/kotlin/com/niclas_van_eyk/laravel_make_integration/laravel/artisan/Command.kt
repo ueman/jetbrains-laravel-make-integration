@@ -1,13 +1,53 @@
 package com.niclas_van_eyk.laravel_make_integration.laravel.artisan
 
-enum class OptionType { String, Class, Integer, Float, Flag }
+enum class OptionType {
+    /**
+     * The option can only be passed as a flag, like --verbose
+     */
+    Flag,
+
+    /**
+     * The option takes some argument, like --foo=bar, but we do not now the
+     * data type of the argument.
+     */
+    Parameter,
+
+    /**
+     * The following types are based on well known parameters, as we cannot infer the
+     * data types from the command description only.
+     * See [WellKnownCommandInformation]
+     */
+
+    /**
+     * The option takes some argument, like --foo=bar
+     */
+    String,
+
+    /**
+     * The option takes some argument, like --foo=App/Models/User
+     */
+    Class,
+
+    /**
+     * The option takes some argument, like --foo=123
+     */
+    Integer,
+
+    /**
+     * The option takes some argument, like --foo=123.456
+     */
+    Float,
+}
 
 class Option(
         val name: String,
-        val type: OptionType,
+        var type: OptionType, // the type can be enhanced later
         val description: String,
         val shortForm: String?
-)
+) {
+    val nameWithoutHint get() = if (this.type == OptionType.Flag) this.name
+                                else this.name.split("[")[0]
+}
 
 class Command(
         val name: String,
@@ -82,7 +122,7 @@ fun parseOptionFromHelpLine(line: String): Option {
 
     // The type "Flag" can be inferred directly, more precise types can be supplied
     // for known options, like the "--model"-flag of artisan make:observer.
-    val type = if (isFlag) OptionType.Flag else OptionType.String
+    val type = if (isFlag) OptionType.Flag else OptionType.Parameter
 
     // We could also extract the default here, but currently this is not that interesting
     var description = ""

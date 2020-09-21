@@ -16,17 +16,22 @@ class Artisan(private val basePath: String) {
         parameters: ArtisanMakeParameters,
         project: Project
     ): PHPScriptRun.Result {
-        return execute("make", subCommand, parameters.asList(), project)
+        return execute(project, "make", subCommand, parameters.asList())
     }
 
     fun execute(
+        project: Project,
         namespace: String,
-        subCommand: String,
-        subCommandParams: Collection<String>,
-        project: Project
+        subCommand: String? = null,
+        subCommandParams: Collection<String> = emptyList()
     ): PHPScriptRun.Result {
-        val params = mutableListOf("$namespace:$subCommand")
-        params.addAll(subCommandParams)
+        val command = if (subCommand != null) "$namespace:$subCommand" else namespace
+
+        val params = mutableListOf(command)
+
+        if (subCommandParams.isNotEmpty()) {
+            params.addAll(subCommandParams)
+        }
 
         return PHPScriptRun(binaryPath, params, project).run()
     }
